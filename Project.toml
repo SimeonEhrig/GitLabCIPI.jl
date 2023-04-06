@@ -1,0 +1,13 @@
+name = "MonteCarloPI"
+uuid = "2db3c979-7d52-4b64-8d6d-d726b304ac26"
+authors = ["Simeon Ehrig <s.ehrig@hzdr.de>"]
+version = "0.0.1"
+
+[compat]
+julia = "1.8"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
