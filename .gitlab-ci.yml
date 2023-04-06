@@ -1,0 +1,4 @@
+run_test:
+  image: julia:1.8
+  script:
+    - julia --project=@. -e "import Pkg; Pkg.test(; coverage = true)"
