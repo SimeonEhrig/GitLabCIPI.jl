@@ -1,4 +1,44 @@
+stages:
+  - unit_test
+  - generate_integration_test
+  - run_integration_test
+
 run_test:
   image: julia:1.8
+  stage: unit_test
   script:
     - julia --project=@. -e "import Pkg; Pkg.test(; coverage = true)"
+
+generate_integration_tests:
+  image: julia:1.8
+  stage: generate_integration_test
+  script:
+    # extract package name
+    - export CI_DEPENDENCY_NAME=$(cat $CI_PROJECT_DIR/Project.toml | grep name | awk '{ print $3 }' | tr -d '"')
+    - echo "CI_DEPENDENCY_NAME -> $CI_DEPENDENCY_NAME"
+    - apt update
+    - apt install -y git
+    - cd /
+    # clone current version of the integration test generator from the main project
+    - git clone https://github.com/SimeonEhrig/GitlabCIMain.git integration_test
+    - cd integration_test/jobGenerator/
+    # use local registry of our projects
+    - julia --project=@. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/SimeonEhrig/GitLabCIRegistry.git"));'
+    # needs to add General registry again, if local registry was added
+    - julia --project=@. -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/JuliaRegistries/General"));'
+    - julia --project=@. -e 'import Pkg; Pkg.instantiate()'
+    # paths of artifacts are relative to CI_PROJECT_DIR
+    - julia --project=. src/jobGenerator.jl > $CI_PROJECT_DIR/integrationjobs.yaml
+    - cat $CI_PROJECT_DIR/integrationjobs.yaml
+  artifacts:
+    paths:
+      - integrationjobs.yaml
+    expire_in: 1 week
+
+run_integration_tests:
+  stage: run_integration_test
+  trigger:
+    include:
+      - artifact: integrationjobs.yaml
+        job: generate_integration_tests
+    strategy: depend
