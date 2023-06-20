@@ -16,7 +16,7 @@ end
 
 Calculate the PI via monte carlo method.
 """
-function get_pi(total_number_of_points::Number=1000000, radius::Number=1000)::Real
+function get_pi(useless_parameter, total_number_of_points::Number=1000000, radius::Number=1000)::Real
     number_of_points_in = reduce(+, broadcast(is_in_radius, rand(0:radius, total_number_of_points), rand(0:radius, total_number_of_points), radius))
     return 4 * (number_of_points_in / total_number_of_points)
 end
